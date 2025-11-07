@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.search_button)
 
     def load_pdf(self):
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open PDF", "", "PDF Files (*.pdf)")
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open PDF", "plans", "PDF Files (*.pdf)")
         if fname:
             self.selected_file = fname
             self.statusBar().showMessage(f"Loaded PDF: {os.path.basename(fname)}")
@@ -61,12 +61,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_terms_editor(self):
         current_cat = self.category_combo.currentText()
         editor = TermEditorWindow("data/terms.json", start_category=current_cat)
-        editor.exec_()
-        new_cat = editor.get_current_category()
+        editor.exec()
         self.load_terms_file("data/terms.json")
-        if new_cat in self.terms:
-            index = self.category_combo.findText(new_cat)
-            self.category_combo.setCurrentIndex(index)
 
     def run_search(self):
         if not self.selected_file:

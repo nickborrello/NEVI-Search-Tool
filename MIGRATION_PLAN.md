@@ -35,11 +35,11 @@ Key goals:
 - [x] Validate on Windows (primary OS); note any platform-specific issues.
 
 ## Phase 4: Optimization and Polish
-- [ ] Leverage new PyQt6 features if beneficial (e.g., type hints for better IDE support).
-- [ ] Update requirements.txt or README to specify PyQt6.
-- [ ] Profile performance (startup time, search speed) and compare to PyQt5 baseline.
-- [ ] Add comments in code for PyQt6-specific changes.
-- [ ] Final Git commit with migration summary.
+- [x] Leverage new PyQt6 features if beneficial (e.g., type hints for better IDE support).
+- [x] Update requirements.txt or README to specify PyQt6.
+- [x] Profile performance (startup time, search speed) and compare to PyQt5 baseline.
+- [x] Add comments in code for PyQt6-specific changes.
+- [x] Final Git commit with migration summary.
 
 ## Risks and Mitigations
 - **Breaking Changes**: QRegExp migration may introduce bugs in highlighting—test regex patterns thoroughly.
