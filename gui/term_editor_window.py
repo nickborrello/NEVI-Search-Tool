@@ -12,7 +12,7 @@ class TermEditorWindow(QtWidgets.QDialog):
     def __init__(self, json_path="data/terms.json", start_category=None):
         super().__init__()
         self.setWindowTitle("Term Editor")
-        self.resize(800, 600)
+        self.resize(1000, 600)
         self.json_path = json_path
         self.start_category = start_category
         self.data = {}
@@ -21,14 +21,57 @@ class TermEditorWindow(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout(self)
 
-        self.tree = QtWidgets.QTreeWidget()
-        self.tree.setHeaderLabel("Terms Structure")
-        self.tree.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.tree.customContextMenuRequested.connect(self.show_context_menu)
-        layout.addWidget(self.tree)
+        # Top: Categories
+        cat_layout = QtWidgets.QHBoxLayout()
+        cat_layout.addWidget(QtWidgets.QLabel("Categories:"))
+        self.cat_list = QtWidgets.QListWidget()
+        self.cat_list.currentItemChanged.connect(self.on_category_changed)
+        cat_layout.addWidget(self.cat_list)
+        cat_btn_layout = QtWidgets.QVBoxLayout()
+        add_cat_btn = QtWidgets.QPushButton("Add")
+        add_cat_btn.clicked.connect(self.add_category)
+        remove_cat_btn = QtWidgets.QPushButton("Remove")
+        remove_cat_btn.clicked.connect(self.remove_category)
+        cat_btn_layout.addWidget(add_cat_btn)
+        cat_btn_layout.addWidget(remove_cat_btn)
+        cat_btn_layout.addStretch()
+        cat_layout.addLayout(cat_btn_layout)
+        layout.addLayout(cat_layout)
 
+        # Middle: Questions
+        q_layout = QtWidgets.QHBoxLayout()
+        q_layout.addWidget(QtWidgets.QLabel("Questions:"))
+        self.q_list = QtWidgets.QListWidget()
+        self.q_list.currentItemChanged.connect(self.on_question_changed)
+        q_layout.addWidget(self.q_list)
+        q_btn_layout = QtWidgets.QVBoxLayout()
+        add_q_btn = QtWidgets.QPushButton("Add")
+        add_q_btn.clicked.connect(self.add_question)
+        remove_q_btn = QtWidgets.QPushButton("Remove")
+        remove_q_btn.clicked.connect(self.remove_question)
+        q_btn_layout.addWidget(add_q_btn)
+        q_btn_layout.addWidget(remove_q_btn)
+        q_btn_layout.addStretch()
+        q_layout.addLayout(q_btn_layout)
+        layout.addLayout(q_layout)
+
+        # Bottom: Terms
+        terms_layout = QtWidgets.QHBoxLayout()
+        terms_layout.addWidget(QtWidgets.QLabel("Term Groups (one per line, comma-separated):"))
+        self.terms_edit = QtWidgets.QPlainTextEdit()
+        self.terms_edit.setPlaceholderText("e.g.\nterm1, term2\nterm3")
+        terms_layout.addWidget(self.terms_edit)
+        terms_btn_layout = QtWidgets.QVBoxLayout()
+        save_terms_btn = QtWidgets.QPushButton("Save Terms")
+        save_terms_btn.clicked.connect(self.save_terms)
+        terms_btn_layout.addWidget(save_terms_btn)
+        terms_btn_layout.addStretch()
+        terms_layout.addLayout(terms_btn_layout)
+        layout.addLayout(terms_layout)
+
+        # Bottom buttons
         button_layout = QtWidgets.QHBoxLayout()
-        self.save_btn = QtWidgets.QPushButton("Save")
+        self.save_btn = QtWidgets.QPushButton("Save All")
         self.cancel_btn = QtWidgets.QPushButton("Cancel")
         button_layout.addStretch()
         button_layout.addWidget(self.save_btn)
@@ -38,7 +81,7 @@ class TermEditorWindow(QtWidgets.QDialog):
         self.save_btn.clicked.connect(self.save_json)
         self.cancel_btn.clicked.connect(self.reject)
 
-        self.load_tree()
+        self.load_ui()
 
     def load_json(self):
         path = resource_path(self.json_path)
@@ -56,109 +99,92 @@ class TermEditorWindow(QtWidgets.QDialog):
         QtWidgets.QMessageBox.information(self, "Saved", "Terms saved successfully.")
         self.accept()
 
-    def load_tree(self):
-        self.tree.clear()
+    def load_ui(self):
+        self.cat_list.clear()
         for cat in sorted(self.data.keys()):
-            cat_item = QtWidgets.QTreeWidgetItem([cat])
-            cat_item.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("category", cat))
-            self.tree.addTopLevelItem(cat_item)
-            for q in sorted(self.data[cat].keys()):
-                q_item = QtWidgets.QTreeWidgetItem([q])
-                q_item.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("question", cat, q))
-                cat_item.addChild(q_item)
-                for i, group in enumerate(self.data[cat][q]):
-                    group_item = QtWidgets.QTreeWidgetItem([f"Group {i+1}"])
-                    group_item.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("group", cat, q, i))
-                    q_item.addChild(group_item)
-                    for term in group:
-                        term_item = QtWidgets.QTreeWidgetItem([term])
-                        term_item.setData(0, QtCore.Qt.ItemDataRole.UserRole, ("term", cat, q, i, term))
-                        group_item.addChild(term_item)
-        self.tree.expandAll()
+            self.cat_list.addItem(cat)
+        if self.start_category and self.start_category in self.data:
+            index = self.cat_list.findItems(self.start_category, QtCore.Qt.MatchFlag.MatchExactly)
+            if index:
+                self.cat_list.setCurrentItem(index[0])
 
-    def show_context_menu(self, position):
-        item = self.tree.itemAt(position)
-        if not item:
-            menu = QtWidgets.QMenu()
-            add_cat_action = menu.addAction("Add Category")
-            add_cat_action.triggered.connect(lambda: self.add_item("category"))
-            menu.exec(self.tree.mapToGlobal(position))
-            return
-
-        data = item.data(0, QtCore.Qt.ItemDataRole.UserRole)
-        menu = QtWidgets.QMenu()
-        if data[0] == "category":
-            add_q_action = menu.addAction("Add Question")
-            add_q_action.triggered.connect(lambda: self.add_item("question", data[1]))
-            remove_action = menu.addAction("Remove Category")
-            remove_action.triggered.connect(lambda: self.remove_item(data))
-        elif data[0] == "question":
-            add_g_action = menu.addAction("Add Group")
-            add_g_action.triggered.connect(lambda: self.add_item("group", data[1], data[2]))
-            remove_action = menu.addAction("Remove Question")
-            remove_action.triggered.connect(lambda: self.remove_item(data))
-        elif data[0] == "group":
-            add_t_action = menu.addAction("Add Term")
-            add_t_action.triggered.connect(lambda: self.add_item("term", data[1], data[2], data[3]))
-            remove_action = menu.addAction("Remove Group")
-            remove_action.triggered.connect(lambda: self.remove_item(data))
-        elif data[0] == "term":
-            remove_action = menu.addAction("Remove Term")
-            remove_action.triggered.connect(lambda: self.remove_item(data))
-        menu.exec(self.tree.mapToGlobal(position))
-
-    def add_item(self, type_, *args):
-        if type_ == "category":
-            name, ok = QtWidgets.QInputDialog.getText(self, "New Category", "Category name:")
-            if ok and name.strip():
-                name = name.strip()
-                if name not in self.data:
-                    self.data[name] = {}
-                    self.load_tree()
-        elif type_ == "question":
-            cat = args[0]
-            name, ok = QtWidgets.QInputDialog.getText(self, "New Question", "Question text:")
-            if ok and name.strip():
-                name = name.strip()
-                if name not in self.data[cat]:
-                    self.data[cat][name] = []
-                    self.load_tree()
-        elif type_ == "group":
-            cat, q = args
-            self.data[cat][q].append([])
-            self.load_tree()
-        elif type_ == "term":
-            cat, q, g_idx = args
-            term, ok = QtWidgets.QInputDialog.getText(self, "New Term", "Term:")
-            if ok and term.strip():
-                self.data[cat][q][g_idx].append(term.strip())
-                self.load_tree()
-
-    def remove_item(self, data):
-        type_ = data[0]
-        if type_ == "category":
-            cat = data[1]
+    def on_category_changed(self, current, previous):
+        self.q_list.clear()
+        self.terms_edit.clear()
+        if current:
+            cat = current.text()
             if cat in self.data:
+                for q in sorted(self.data[cat].keys()):
+                    self.q_list.addItem(q)
+
+    def on_question_changed(self, current, previous):
+        self.terms_edit.clear()
+        if current:
+            cat = self.cat_list.currentItem().text()
+            q = current.text()
+            if cat in self.data and q in self.data[cat]:
+                groups = self.data[cat][q]
+                lines = ["\n".join(sorted(group)) for group in groups]
+                self.terms_edit.setPlainText("\n\n".join(lines))
+
+    def add_category(self):
+        name, ok = QtWidgets.QInputDialog.getText(self, "Add Category", "Category name:")
+        if ok and name.strip():
+            name = name.strip()
+            if name not in self.data:
+                self.data[name] = {}
+                self.load_ui()
+
+    def remove_category(self):
+        current = self.cat_list.currentItem()
+        if current:
+            cat = current.text()
+            confirm = QtWidgets.QMessageBox.question(self, "Remove Category", f"Remove '{cat}' and all its questions?")
+            if confirm == QtWidgets.QMessageBox.StandardButton.Yes:
                 del self.data[cat]
-                self.load_tree()
-        elif type_ == "question":
-            cat, q = data[1], data[2]
-            if q in self.data[cat]:
+                self.load_ui()
+
+    def add_question(self):
+        current_cat = self.cat_list.currentItem()
+        if not current_cat:
+            QtWidgets.QMessageBox.warning(self, "No Category", "Select a category first.")
+            return
+        cat = current_cat.text()
+        name, ok = QtWidgets.QInputDialog.getText(self, "Add Question", "Question text:")
+        if ok and name.strip():
+            name = name.strip()
+            if name not in self.data[cat]:
+                self.data[cat][name] = []
+                self.on_category_changed(current_cat, None)
+
+    def remove_question(self):
+        current_cat = self.cat_list.currentItem()
+        current_q = self.q_list.currentItem()
+        if current_cat and current_q:
+            cat = current_cat.text()
+            q = current_q.text()
+            confirm = QtWidgets.QMessageBox.question(self, "Remove Question", f"Remove '{q}' and all its terms?")
+            if confirm == QtWidgets.QMessageBox.StandardButton.Yes:
                 del self.data[cat][q]
-                self.load_tree()
-        elif type_ == "group":
-            cat, q, g_idx = data[1], data[2], data[3]
-            if g_idx < len(self.data[cat][q]):
-                del self.data[cat][q][g_idx]
-                self.load_tree()
-        elif type_ == "term":
-            cat, q, g_idx, term = data[1], data[2], data[3], data[4]
-            if term in self.data[cat][q][g_idx]:
-                self.data[cat][q][g_idx].remove(term)
-                self.load_tree()
+                self.on_category_changed(current_cat, None)
+
+    def save_terms(self):
+        current_cat = self.cat_list.currentItem()
+        current_q = self.q_list.currentItem()
+        if not current_cat or not current_q:
+            QtWidgets.QMessageBox.warning(self, "No Selection", "Select a category and question.")
+            return
+        cat = current_cat.text()
+        q = current_q.text()
+        text = self.terms_edit.toPlainText()
+        groups = []
+        for block in text.split("\n\n"):
+            group = [term.strip() for term in block.split("\n") if term.strip()]
+            if group:
+                groups.append(group)
+        self.data[cat][q] = groups
+        QtWidgets.QMessageBox.information(self, "Saved", "Terms updated.")
 
     def get_current_category(self):
-        # Return the first category or None
-        if self.data:
-            return next(iter(self.data))
-        return None
+        current = self.cat_list.currentItem()
+        return current.text() if current else None
