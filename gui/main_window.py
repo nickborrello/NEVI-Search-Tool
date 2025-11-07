@@ -42,9 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QListWidget::item { padding: 4px; }
             QListWidget::item:selected { background-color: #0078d4; color: #ffffff; }
             QListWidget::item:hover { background-color: #555555; }
-            QGroupBox { font-weight: bold; border: 2px solid #555555; border-radius: 5px; margin-top: 1ex; padding-top: 10px; color: #ffffff; }
-            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #ffffff; }
-            QLabel { color: #ffffff; }
+            QTextEdit { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; border-radius: 4px; padding: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
             QStatusBar { background-color: #3c3c3c; color: #ffffff; border-top: 1px solid #555555; }
         """)
 
@@ -77,24 +75,26 @@ class MainWindow(QtWidgets.QMainWindow):
         cat_layout = QtWidgets.QHBoxLayout()
         cat_layout.addWidget(QtWidgets.QLabel("Category:"))
         self.category_combo = QtWidgets.QComboBox()
+        self.category_combo.setToolTip("Select a category of search terms")
         cat_layout.addWidget(self.category_combo)
         config_layout.addLayout(cat_layout)
 
-        config_layout.addWidget(QtWidgets.QLabel("Questions:"))
+        config_layout.addWidget(QtWidgets.QLabel("Question:"))
         self.term_list = QtWidgets.QListWidget()
+        self.term_list.setToolTip("Select a question to define the keywords to search for")
         config_layout.addWidget(self.term_list)
 
         main_layout.addWidget(config_group, 1)
 
-        # Right panel: Preview or info
-        info_group = QtWidgets.QGroupBox("Document Info")
-        info_layout = QtWidgets.QVBoxLayout(info_group)
-        self.file_label = QtWidgets.QLabel("No PDF loaded")
-        info_layout.addWidget(self.file_label)
-        self.status_label = QtWidgets.QLabel("Ready to search")
-        info_layout.addWidget(self.status_label)
-        info_layout.addStretch()
-        main_layout.addWidget(info_group, 1)
+        # Right panel: Term Preview
+        preview_group = QtWidgets.QGroupBox("Selected Search Terms")
+        preview_layout = QtWidgets.QVBoxLayout(preview_group)
+        self.terms_preview = QtWidgets.QTextEdit()
+        self.terms_preview.setReadOnly(True)
+        self.terms_preview.setPlaceholderText("Select a category and question to preview the search terms here.")
+        self.terms_preview.setMaximumHeight(300)
+        preview_layout.addWidget(self.terms_preview)
+        main_layout.addWidget(preview_group, 1)
 
         # Status bar
         self.statusBar().showMessage("Ready")
@@ -103,23 +103,33 @@ class MainWindow(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open PDF", "plans", "PDF Files (*.pdf)")
         if fname:
             self.selected_file = fname
-            self.file_label.setText(f"Loaded: {os.path.basename(fname)}")
             self.statusBar().showMessage(f"Loaded PDF: {os.path.basename(fname)}")
         else:
-            self.file_label.setText("No PDF loaded")
+            self.statusBar().showMessage("No PDF loaded")
 
     def load_terms_file(self, fname):
         self.terms = load_terms(fname)
         self.category_combo.clear()
         self.category_combo.addItems(self.terms.keys())
         self.category_combo.currentTextChanged.connect(self.update_term_list)
+        self.term_list.currentItemChanged.connect(self.update_terms_preview)
         self.update_term_list()
 
-    def update_term_list(self):
+    def update_terms_preview(self):
         category = self.category_combo.currentText()
-        self.term_list.clear()
-        if category in self.terms:
-            self.term_list.addItems(self.terms[category].keys())
+        question_item = self.term_list.currentItem()
+        if category in self.terms and question_item:
+            question = question_item.text()
+            if question in self.terms[category]:
+                term_sets = self.terms[category][question]
+                preview_text = f"Category: {category}\nQuestion: {question}\n\nSearch Terms:\n"
+                for i, group in enumerate(term_sets, 1):
+                    preview_text += f"Group {i}: {', '.join(group)}\n"
+                self.terms_preview.setPlainText(preview_text)
+            else:
+                self.terms_preview.setPlainText("No terms found for selected question.")
+        else:
+            self.terms_preview.setPlainText("Select a category and question to preview the search terms here.")
 
     def open_terms_editor(self):
         current_cat = self.category_combo.currentText()
