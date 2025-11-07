@@ -10,34 +10,81 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("Universal PDF Keyword Search")
         self.resize(1000, 700)
+        self.setWindowIcon(QtGui.QIcon("assets/wpi_logo.ico"))  # Assuming icon exists
         self.terms = {}
         self.selected_file = None
 
         self.setup_ui()
         self.load_terms_file("data/terms.json")
 
+        # Apply professional stylesheet
+        self.setStyleSheet("""
+            QMainWindow { background-color: #f5f5f5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
+            QPushButton { background-color: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+            QPushButton:hover { background-color: #106ebe; }
+            QPushButton:pressed { background-color: #005a9e; }
+            QPushButton:disabled { background-color: #cccccc; color: #666666; }
+            QComboBox { background-color: white; border: 1px solid #cccccc; padding: 4px; border-radius: 4px; }
+            QComboBox:hover { border-color: #0078d4; }
+            QComboBox::drop-down { border: none; }
+            QComboBox::down-arrow { image: url(down_arrow.png); }  /* Placeholder */
+            QListWidget { background-color: white; border: 1px solid #cccccc; border-radius: 4px; }
+            QListWidget::item { padding: 4px; }
+            QListWidget::item:selected { background-color: #0078d4; color: white; }
+            QGroupBox { font-weight: bold; border: 2px solid #cccccc; border-radius: 5px; margin-top: 1ex; padding-top: 10px; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #333333; }
+            QLabel { color: #333333; }
+        """)
+
     def setup_ui(self):
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
         layout = QtWidgets.QVBoxLayout(central_widget)
+        layout.setSpacing(10)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-        self.file_button = QtWidgets.QPushButton("Load PDF")
+        # PDF Loading Section
+        pdf_group = QtWidgets.QGroupBox("PDF Document")
+        pdf_layout = QtWidgets.QVBoxLayout(pdf_group)
+        self.file_button = QtWidgets.QPushButton("📁 Load PDF")
+        self.file_button.setToolTip("Select a PDF file to search")
         self.file_button.clicked.connect(self.load_pdf)
-        layout.addWidget(self.file_button)
+        pdf_layout.addWidget(self.file_button)
+        layout.addWidget(pdf_group)
 
+        # Terms Selection Section
+        terms_group = QtWidgets.QGroupBox("Search Configuration")
+        terms_layout = QtWidgets.QVBoxLayout(terms_group)
+
+        cat_layout = QtWidgets.QHBoxLayout()
+        cat_layout.addWidget(QtWidgets.QLabel("Category:"))
         self.category_combo = QtWidgets.QComboBox()
-        layout.addWidget(self.category_combo)
+        cat_layout.addWidget(self.category_combo)
+        terms_layout.addLayout(cat_layout)
 
+        terms_layout.addWidget(QtWidgets.QLabel("Questions:"))
         self.term_list = QtWidgets.QListWidget()
-        layout.addWidget(self.term_list)
+        self.term_list.setMaximumHeight(200)
+        terms_layout.addWidget(self.term_list)
 
-        self.editTermsButton = QtWidgets.QPushButton("Edit Terms")
+        self.editTermsButton = QtWidgets.QPushButton("⚙️ Edit Terms")
+        self.editTermsButton.setToolTip("Open term configuration editor")
         self.editTermsButton.clicked.connect(self.open_terms_editor)
-        layout.addWidget(self.editTermsButton)
+        terms_layout.addWidget(self.editTermsButton)
 
-        self.search_button = QtWidgets.QPushButton("Run Search")
+        layout.addWidget(terms_group)
+
+        # Action Section
+        action_group = QtWidgets.QGroupBox("Actions")
+        action_layout = QtWidgets.QVBoxLayout(action_group)
+        self.search_button = QtWidgets.QPushButton("🔍 Run Search")
+        self.search_button.setToolTip("Execute search on the loaded PDF")
         self.search_button.clicked.connect(self.run_search)
-        layout.addWidget(self.search_button)
+        action_layout.addWidget(self.search_button)
+        layout.addWidget(action_group)
+
+        # Status bar
+        self.statusBar().showMessage("Ready")
 
     def load_pdf(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open PDF", "plans", "PDF Files (*.pdf)")

@@ -5,7 +5,8 @@ class ReaderWindow(QtWidgets.QWidget):
     def __init__(self, pdf_path, matched_pages, term_sets, parent=None):
         super().__init__(parent)
         self.setWindowTitle("PDF Viewer - Highlighted Matches")
-        self.resize(800, 600)
+        self.resize(1000, 700)
+        self.setWindowIcon(QtGui.QIcon("assets/wpi_logo.ico"))  # Assuming icon exists
 
         self.pdf_path = pdf_path
         self.matched_pages = matched_pages
@@ -14,25 +15,55 @@ class ReaderWindow(QtWidgets.QWidget):
 
         self.reader = PdfReader(self.pdf_path)
 
+        self.setup_ui()
+
+        # Apply professional stylesheet
+        self.setStyleSheet("""
+            QWidget { background-color: #f5f5f5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
+            QTextEdit { background-color: white; border: 1px solid #cccccc; border-radius: 4px; padding: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; }
+            QPushButton { background-color: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+            QPushButton:hover { background-color: #106ebe; }
+            QPushButton:pressed { background-color: #005a9e; }
+            QPushButton:disabled { background-color: #cccccc; color: #666666; }
+            QLabel { color: #333333; font-weight: bold; }
+            QGroupBox { font-weight: bold; border: 2px solid #cccccc; border-radius: 5px; margin-top: 1ex; padding-top: 10px; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #333333; }
+        """)
+
+        self.update_page()
+
+    def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
+        layout.setSpacing(10)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        # Text Viewer Section
+        viewer_group = QtWidgets.QGroupBox("Document Content")
+        viewer_layout = QtWidgets.QVBoxLayout(viewer_group)
         self.text_viewer = QtWidgets.QTextEdit(self)
         self.text_viewer.setReadOnly(True)
-        self.text_viewer.setFont(QtGui.QFont("Arial", 12))
-        layout.addWidget(self.text_viewer)
+        self.text_viewer.setFont(QtGui.QFont("Segoe UI", 11))
+        viewer_layout.addWidget(self.text_viewer)
+        layout.addWidget(viewer_group)
 
-        nav_layout = QtWidgets.QHBoxLayout()
-        self.prev_button = QtWidgets.QPushButton("Previous Page")
-        self.next_button = QtWidgets.QPushButton("Next Page")
-        self.page_label = QtWidgets.QLabel()
+        # Navigation Section
+        nav_group = QtWidgets.QGroupBox("Navigation")
+        nav_layout = QtWidgets.QHBoxLayout(nav_group)
+        self.prev_button = QtWidgets.QPushButton("⬅️ Previous Page")
+        self.prev_button.setToolTip("Go to previous matched page")
         nav_layout.addWidget(self.prev_button)
-        nav_layout.addWidget(self.page_label, alignment=QtCore.Qt.AlignCenter)
+
+        self.page_label = QtWidgets.QLabel("Page: N/A")
+        self.page_label.setAlignment(QtCore.Qt.AlignCenter)
+        nav_layout.addWidget(self.page_label, stretch=1)
+
+        self.next_button = QtWidgets.QPushButton("Next Page ➡️")
+        self.next_button.setToolTip("Go to next matched page")
         nav_layout.addWidget(self.next_button)
-        layout.addLayout(nav_layout)
+        layout.addWidget(nav_group)
 
         self.prev_button.clicked.connect(self.prev_page)
         self.next_button.clicked.connect(self.next_page)
-
-        self.update_page()
 
     def update_page(self):
         if not self.matched_pages:

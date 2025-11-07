@@ -109,16 +109,23 @@ class TermEditorWindow(QtWidgets.QDialog):
         self.save_btn.clicked.connect(self.save_json)
         self.cancel_btn.clicked.connect(self.reject)
 
-        # Apply stylesheet for polish
+        # Apply professional stylesheet
         self.setStyleSheet("""
-            QDialog { background-color: #f0f0f0; }
+            QDialog { background-color: #f5f5f5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
             QGroupBox { font-weight: bold; border: 2px solid #cccccc; border-radius: 5px; margin-top: 1ex; }
-            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; }
-            QListWidget { border: 1px solid #cccccc; border-radius: 3px; }
-            QTableWidget { border: 1px solid #cccccc; border-radius: 3px; gridline-color: #cccccc; }
-            QPushButton { padding: 5px 10px; border: 1px solid #aaaaaa; border-radius: 3px; background-color: #ffffff; }
-            QPushButton:hover { background-color: #e0e0e0; }
-            QPushButton:pressed { background-color: #d0d0d0; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #333333; }
+            QListWidget { background-color: white; border: 1px solid #cccccc; border-radius: 4px; }
+            QListWidget::item { padding: 4px; }
+            QListWidget::item:selected { background-color: #0078d4; color: white; }
+            QTableWidget { background-color: white; border: 1px solid #cccccc; border-radius: 4px; gridline-color: #cccccc; }
+            QTableWidget::item { padding: 4px; }
+            QPushButton { background-color: #0078d4; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; }
+            QPushButton:hover { background-color: #106ebe; }
+            QPushButton:pressed { background-color: #005a9e; }
+            QPushButton:disabled { background-color: #cccccc; color: #666666; }
+            QLabel { color: #333333; }
+            QInputDialog { background-color: #f5f5f5; }
+            QMessageBox { background-color: #f5f5f5; }
         """)
 
         self.load_ui()
