@@ -17,17 +17,17 @@ class ReaderWindow(QtWidgets.QWidget):
 
         self.setup_ui()
 
-        # Apply professional stylesheet
+        # Apply dark theme stylesheet
         self.setStyleSheet("""
-            QWidget { background-color: #f5f5f5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
-            QTextEdit { background-color: white; border: 1px solid #cccccc; border-radius: 4px; padding: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; }
-            QPushButton { background-color: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+            QWidget { background-color: #2b2b2b; color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
+            QTextEdit { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; border-radius: 4px; padding: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; }
+            QPushButton { background-color: #0078d4; color: #ffffff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
             QPushButton:hover { background-color: #106ebe; }
             QPushButton:pressed { background-color: #005a9e; }
-            QPushButton:disabled { background-color: #cccccc; color: #666666; }
-            QLabel { color: #333333; font-weight: bold; }
-            QGroupBox { font-weight: bold; border: 2px solid #cccccc; border-radius: 5px; margin-top: 1ex; padding-top: 10px; }
-            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #333333; }
+            QPushButton:disabled { background-color: #555555; color: #aaaaaa; }
+            QLabel { color: #ffffff; font-weight: bold; }
+            QGroupBox { font-weight: bold; border: 2px solid #555555; border-radius: 5px; margin-top: 1ex; padding-top: 10px; color: #ffffff; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #ffffff; }
         """)
 
         self.update_page()

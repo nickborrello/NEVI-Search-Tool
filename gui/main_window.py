@@ -9,7 +9,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Universal PDF Keyword Search")
-        self.resize(1000, 700)
+        self.resize(1200, 800)
         self.setWindowIcon(QtGui.QIcon("assets/wpi_logo.ico"))  # Assuming icon exists
         self.terms = {}
         self.selected_file = None
@@ -17,71 +17,84 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setup_ui()
         self.load_terms_file("data/terms.json")
 
-        # Apply professional stylesheet
+        # Apply dark theme stylesheet
         self.setStyleSheet("""
-            QMainWindow { background-color: #f5f5f5; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
-            QPushButton { background-color: #0078d4; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
+            QMainWindow { background-color: #2b2b2b; color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
+            QMenuBar { background-color: #3c3c3c; color: #ffffff; border-bottom: 1px solid #555555; }
+            QMenuBar::item { background-color: transparent; padding: 4px 8px; }
+            QMenuBar::item:selected { background-color: #0078d4; }
+            QMenu { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; }
+            QMenu::item:selected { background-color: #0078d4; }
+            QToolBar { background-color: #3c3c3c; border-bottom: 1px solid #555555; }
+            QToolBar QToolButton { background-color: #0078d4; color: #ffffff; border: none; padding: 6px; border-radius: 4px; font-weight: bold; }
+            QToolBar QToolButton:hover { background-color: #106ebe; }
+            QToolBar QToolButton:pressed { background-color: #005a9e; }
+            QPushButton { background-color: #0078d4; color: #ffffff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; }
             QPushButton:hover { background-color: #106ebe; }
             QPushButton:pressed { background-color: #005a9e; }
-            QPushButton:disabled { background-color: #cccccc; color: #666666; }
-            QComboBox { background-color: white; border: 1px solid #cccccc; padding: 4px; border-radius: 4px; }
+            QPushButton:disabled { background-color: #555555; color: #aaaaaa; }
+            QComboBox { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; padding: 4px; border-radius: 4px; }
             QComboBox:hover { border-color: #0078d4; }
             QComboBox::drop-down { border: none; }
             QComboBox::down-arrow { image: url(down_arrow.png); }  /* Placeholder */
-            QListWidget { background-color: white; border: 1px solid #cccccc; border-radius: 4px; }
+            QComboBox QAbstractItemView { background-color: #3c3c3c; color: #ffffff; selection-background-color: #0078d4; }
+            QListWidget { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; border-radius: 4px; }
             QListWidget::item { padding: 4px; }
-            QListWidget::item:selected { background-color: #0078d4; color: white; }
-            QGroupBox { font-weight: bold; border: 2px solid #cccccc; border-radius: 5px; margin-top: 1ex; padding-top: 10px; }
-            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #333333; }
-            QLabel { color: #333333; }
+            QListWidget::item:selected { background-color: #0078d4; color: #ffffff; }
+            QListWidget::item:hover { background-color: #555555; }
+            QGroupBox { font-weight: bold; border: 2px solid #555555; border-radius: 5px; margin-top: 1ex; padding-top: 10px; color: #ffffff; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #ffffff; }
+            QLabel { color: #ffffff; }
+            QStatusBar { background-color: #3c3c3c; color: #ffffff; border-top: 1px solid #555555; }
         """)
 
     def setup_ui(self):
+        # Menu bar
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu("File")
+        load_action = QtGui.QAction("📁 Load PDF", self)
+        load_action.triggered.connect(self.load_pdf)
+        file_menu.addAction(load_action)
+
+        # Toolbar
+        toolbar = self.addToolBar("Main Toolbar")
+        edit_action = QtGui.QAction("⚙️ Edit Terms", self)
+        edit_action.triggered.connect(self.open_terms_editor)
+        toolbar.addAction(edit_action)
+        search_action = QtGui.QAction("🔍 Run Search", self)
+        search_action.triggered.connect(self.run_search)
+        toolbar.addAction(search_action)
+
+        # Central widget with splitter
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
-        layout = QtWidgets.QVBoxLayout(central_widget)
-        layout.setSpacing(10)
-        layout.setContentsMargins(20, 20, 20, 20)
+        main_layout = QtWidgets.QHBoxLayout(central_widget)
 
-        # PDF Loading Section
-        pdf_group = QtWidgets.QGroupBox("PDF Document")
-        pdf_layout = QtWidgets.QVBoxLayout(pdf_group)
-        self.file_button = QtWidgets.QPushButton("📁 Load PDF")
-        self.file_button.setToolTip("Select a PDF file to search")
-        self.file_button.clicked.connect(self.load_pdf)
-        pdf_layout.addWidget(self.file_button)
-        layout.addWidget(pdf_group)
-
-        # Terms Selection Section
-        terms_group = QtWidgets.QGroupBox("Search Configuration")
-        terms_layout = QtWidgets.QVBoxLayout(terms_group)
+        # Left panel: Configuration
+        config_group = QtWidgets.QGroupBox("Search Configuration")
+        config_layout = QtWidgets.QVBoxLayout(config_group)
 
         cat_layout = QtWidgets.QHBoxLayout()
         cat_layout.addWidget(QtWidgets.QLabel("Category:"))
         self.category_combo = QtWidgets.QComboBox()
         cat_layout.addWidget(self.category_combo)
-        terms_layout.addLayout(cat_layout)
+        config_layout.addLayout(cat_layout)
 
-        terms_layout.addWidget(QtWidgets.QLabel("Questions:"))
+        config_layout.addWidget(QtWidgets.QLabel("Questions:"))
         self.term_list = QtWidgets.QListWidget()
-        self.term_list.setMaximumHeight(200)
-        terms_layout.addWidget(self.term_list)
+        config_layout.addWidget(self.term_list)
 
-        self.editTermsButton = QtWidgets.QPushButton("⚙️ Edit Terms")
-        self.editTermsButton.setToolTip("Open term configuration editor")
-        self.editTermsButton.clicked.connect(self.open_terms_editor)
-        terms_layout.addWidget(self.editTermsButton)
+        main_layout.addWidget(config_group, 1)
 
-        layout.addWidget(terms_group)
-
-        # Action Section
-        action_group = QtWidgets.QGroupBox("Actions")
-        action_layout = QtWidgets.QVBoxLayout(action_group)
-        self.search_button = QtWidgets.QPushButton("🔍 Run Search")
-        self.search_button.setToolTip("Execute search on the loaded PDF")
-        self.search_button.clicked.connect(self.run_search)
-        action_layout.addWidget(self.search_button)
-        layout.addWidget(action_group)
+        # Right panel: Preview or info
+        info_group = QtWidgets.QGroupBox("Document Info")
+        info_layout = QtWidgets.QVBoxLayout(info_group)
+        self.file_label = QtWidgets.QLabel("No PDF loaded")
+        info_layout.addWidget(self.file_label)
+        self.status_label = QtWidgets.QLabel("Ready to search")
+        info_layout.addWidget(self.status_label)
+        info_layout.addStretch()
+        main_layout.addWidget(info_group, 1)
 
         # Status bar
         self.statusBar().showMessage("Ready")
@@ -90,7 +103,10 @@ class MainWindow(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open PDF", "plans", "PDF Files (*.pdf)")
         if fname:
             self.selected_file = fname
+            self.file_label.setText(f"Loaded: {os.path.basename(fname)}")
             self.statusBar().showMessage(f"Loaded PDF: {os.path.basename(fname)}")
+        else:
+            self.file_label.setText("No PDF loaded")
 
     def load_terms_file(self, fname):
         self.terms = load_terms(fname)
