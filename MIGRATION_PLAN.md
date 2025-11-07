@@ -11,28 +11,28 @@ Key goals:
 
 ## Phase 1: Preparation and Research
 - [x] Review Qt6/PyQt6 documentation for breaking changes (focus on QRegExp, enums, signals).
-- [ ] Backup current codebase (commit to Git).
-- [ ] Install PyQt6 in a virtual environment: `pip install PyQt6`.
-- [ ] Run current app with PyQt5 to confirm baseline functionality.
-- [ ] Identify all PyQt5-specific code (grep for "PyQt5", "QRegExp", etc.).
+- [x] Backup current codebase (commit to Git).
+- [x] Install PyQt6 in a virtual environment: `pip install PyQt6`.
+- [x] Run current app with PyQt5 to confirm baseline functionality.
+- [x] Identify all PyQt5-specific code (grep for "PyQt5", "QRegExp", etc.).
 
 ## Phase 2: Core Migration
-- [ ] Update main.py: Change imports from PyQt5 to PyQt6.
-- [ ] Update gui/main_window.py: Migrate QMainWindow, QComboBox, QListWidget, QPushButton, QFileDialog, QMessageBox.
-- [ ] Update gui/reader_window.py: Replace QRegExp with QRegularExpression in highlight_text() method.
-- [ ] Update gui/term_editor_window.py: Migrate QDialog, QComboBox, QListWidget, QPlainTextEdit, QMessageBox.
-- [ ] Update logic/term_loader.py: No changes needed (pure Python).
-- [ ] Update logic/search_engine.py: No changes needed (uses pypdf, not PyQt).
-- [ ] Update data/terms.json: No changes needed.
-- [ ] Update README.md: Change installation instructions to PyQt6, update Python version to 3.8+.
+- [x] Update main.py: Change imports from PyQt5 to PyQt6.
+- [x] Update gui/main_window.py: Migrate QMainWindow, QComboBox, QListWidget, QPushButton, QFileDialog, QMessageBox.
+- [x] Update gui/reader_window.py: Replace QRegExp with QRegularExpression in highlight_text() method.
+- [x] Update gui/term_editor_window.py: Migrate QDialog, QComboBox, QListWidget, QPlainTextEdit, QMessageBox.
+- [x] Update logic/term_loader.py: No changes needed (pure Python).
+- [x] Update logic/search_engine.py: No changes needed (uses pypdf, not PyQt).
+- [x] Update data/terms.json: No changes needed.
+- [x] Update README.md: Change installation instructions to PyQt6, update Python version to 3.8+.
 
 ## Phase 3: Testing and Validation
-- [ ] Run app and test basic UI (load PDF, select category/question, run search).
-- [ ] Test PDF reading and keyword highlighting (ensure matches are found and highlighted).
-- [ ] Test term editor (add/remove categories/questions, save changes).
-- [ ] Check for runtime errors (e.g., deprecated API warnings).
-- [ ] Test on different PDF files (various sizes, text complexity).
-- [ ] Validate on Windows (primary OS); note any platform-specific issues.
+- [x] Run app and test basic UI (load PDF, select category/question, run search).
+- [x] Test PDF reading and keyword highlighting (ensure matches are found and highlighted).
+- [x] Test term editor (add/remove categories/questions, save changes).
+- [x] Check for runtime errors (e.g., deprecated API warnings).
+- [x] Test on different PDF files (various sizes, text complexity).
+- [x] Validate on Windows (primary OS); note any platform-specific issues.
 
 ## Phase 4: Optimization and Polish
 - [ ] Leverage new PyQt6 features if beneficial (e.g., type hints for better IDE support).

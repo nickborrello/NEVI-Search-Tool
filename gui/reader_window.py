@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtWidgets, QtGui, QtCore
 from pypdf import PdfReader
 
 class ReaderWindow(QtWidgets.QWidget):
@@ -60,13 +60,16 @@ class ReaderWindow(QtWidgets.QWidget):
             for term in group:
                 if not term.strip():
                     continue
-                pattern = QtCore.QRegExp(r"\b" + QtCore.QRegExp.escape(term) + r"\b", QtCore.Qt.CaseInsensitive)
-                pos = 0
-                while (pos := pattern.indexIn(text, pos)) != -1:
-                    cursor.setPosition(pos)
-                    cursor.movePosition(QtGui.QTextCursor.EndOfWord, 1)
+                # PyQt6 migration: Replaced QRegExp with QRegularExpression (QRegExp deprecated in Qt6)
+                regex = QtCore.QRegularExpression(r"\b" + QtCore.QRegularExpression.escape(term) + r"\b", QtCore.QRegularExpression.CaseInsensitiveOption)
+                it = regex.globalMatch(text)
+                while it.hasNext():
+                    match = it.next()
+                    start = match.capturedStart()
+                    end = match.capturedEnd()
+                    cursor.setPosition(start)
+                    cursor.setPosition(end, QtGui.QTextCursor.KeepAnchor)
                     cursor.mergeCharFormat(fmt)
-                    pos += pattern.matchedLength()
 
     def next_page(self):
         if self.current_index < len(self.matched_pages) - 1:

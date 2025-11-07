@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt6 import QtWidgets, QtGui, QtCore
 import os
 from logic.search_engine import search_pdf_for_terms
 from logic.term_loader import load_terms

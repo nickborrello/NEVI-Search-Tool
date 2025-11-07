@@ -45,14 +45,14 @@ Originally developed for a WPI undergraduate research initiative, **sponsored by
 
 ### Requirements
 
-- Python 3.7+
-- PyQt5
+- Python 3.8+
+- PyQt6
 - pypdf
 
 ### Install dependencies:
 
 ```bash
-pip install PyQt5 pypdf
+pip install PyQt6 pypdf
 ```
 
 ---
