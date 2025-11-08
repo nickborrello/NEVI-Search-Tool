@@ -160,10 +160,12 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         text = item.text()
         if 'Page' in text:
-            page_num = int(text.split()[1]) - 1
+            page_part = text.split(':')[0]
+            page_num = int(page_part.split()[1]) - 1
             if page_num in self.results:
                 category = self.category_combo.currentText()
                 question = self.question_list.currentItem().text()
                 term_sets = self.terms[category][question]
-                self.reader = ReaderWindow(self.selected_file, [page_num], term_sets)
+                self.reader = ReaderWindow(self.selected_file, list(self.results.keys()), term_sets)
+                self.reader.current_index = list(self.results.keys()).index(page_num)
                 self.reader.show()

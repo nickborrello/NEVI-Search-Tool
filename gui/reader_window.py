@@ -84,7 +84,7 @@ class ReaderWindow(QtWidgets.QWidget):
         self.text_viewer.setPlainText(text)
         cursor = self.text_viewer.textCursor()
         fmt = QtGui.QTextCharFormat()
-        fmt.setBackground(QtGui.QColor('yellow'))
+        fmt.setBackground(QtGui.QColor('#FFA500'))
 
         for group in term_sets:
             for term in group:
