@@ -66,15 +66,15 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.setContentsMargins(20, 20, 20, 20)
 
         # Menu bar
-        menubar = self.menuBar()
-        file_menu = menubar.addMenu('File')
+        menubar = self.menuBar()  # type: ignore
+        file_menu = menubar.addMenu('File')  # type: ignore
         load_action = QtGui.QAction('Load PDF', self)
         load_action.triggered.connect(self.load_pdf)
-        file_menu.addAction(load_action)
-        tools_menu = menubar.addMenu('Tools')
+        file_menu.addAction(load_action)  # type: ignore
+        tools_menu = menubar.addMenu('Tools')  # type: ignore
         edit_action = QtGui.QAction('Edit Terms', self)
         edit_action.triggered.connect(self.open_terms_editor)
-        tools_menu.addAction(edit_action)
+        tools_menu.addAction(edit_action)  # type: ignore
 
         # Top section: Configuration
         config_group = QtWidgets.QGroupBox('Search Configuration')
@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         exact_layout.setSpacing(0)
         exact_layout.addWidget(self.exact_radio)
         exact_icon = QtWidgets.QLabel()
-        exact_icon.setPixmap(QtWidgets.QApplication.style().standardPixmap(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation))
+        exact_icon.setPixmap(QtWidgets.QApplication.style().standardPixmap(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation))  # type: ignore
         exact_icon.setToolTip('Exact keyword matching with word boundaries.\nSearches for terms exactly as entered,\nincluding word boundaries for precise matches.')
         exact_layout.addWidget(exact_icon)
         radio_layout.addLayout(exact_layout)
@@ -111,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fuzzy_layout.setSpacing(0)
         fuzzy_layout.addWidget(self.fuzzy_radio)
         fuzzy_icon = QtWidgets.QLabel()
-        fuzzy_icon.setPixmap(QtWidgets.QApplication.style().standardPixmap(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation))
+        fuzzy_icon.setPixmap(QtWidgets.QApplication.style().standardPixmap(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation))  # type: ignore
         fuzzy_icon.setToolTip('Approximate string matching for typos and variations.\nUses similarity scoring to find matches that are close\nbut not exact, useful for handling spelling errors or synonyms.')
         fuzzy_layout.addWidget(fuzzy_icon)
         radio_layout.addLayout(fuzzy_layout)
@@ -165,14 +165,14 @@ class MainWindow(QtWidgets.QMainWindow):
         results_layout.addWidget(self.view_button)
         layout.addWidget(results_group)
 
-        self.statusBar().showMessage('Ready')
+        self.statusBar().showMessage('Ready')  # type: ignore
 
     def load_pdf(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open PDF', 'plans', 'PDF Files (*.pdf)')
         if fname:
             self.selected_file = fname
             self.load_button.setText(f"📁 {os.path.basename(fname)}")
-            self.statusBar().showMessage(f'Loaded PDF: {os.path.basename(fname)}')
+            self.statusBar().showMessage(f'Loaded PDF: {os.path.basename(fname)}')  # type: ignore
 
     def load_terms_file(self):
         if not os.path.exists(self.terms_path):
@@ -198,10 +198,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 if items:
                     self.question_list.setCurrentItem(items[0])
 
-    def on_mode_changed(self):
-        enabled = self.fuzzy_radio.isChecked() or self.semantic_radio.isChecked()
-        self.threshold_slider.setEnabled(enabled)
-
     def open_terms_editor(self):
         current_cat = self.category_combo.currentText()
         editor = TermEditorWindow(self.terms_path, start_category=current_cat)
@@ -219,7 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, 'Incomplete Selection', 'Please select a category and a question.')
             return
 
-        question = question_item.text()
+        question = question_item.text()  # type: ignore
         term_sets = self.terms[category][question]
         
         use_preprocessing = self.preprocessing_checkbox.isChecked()
@@ -243,13 +239,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.results_label.setText(f'Found matches on {num_pages} pages.')
             self.view_button.setEnabled(True)
 
-        self.statusBar().showMessage(f'Search completed. Found matches on {len(self.results)} pages.')
+        self.statusBar().showMessage(f'Search completed. Found matches on {len(self.results)} pages.')  # type: ignore
         self.save_config()
 
     def view_results(self):
         if self.results:
             category = self.category_combo.currentText()
-            question = self.question_list.currentItem().text()
+            question = self.question_list.currentItem().text()  # type: ignore
             term_sets = self.terms[category][question]
             self.reader = ReaderWindow(self.selected_file, list(self.results.keys()), term_sets, self.mode, self.threshold)
             self.reader.show()
@@ -279,7 +275,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def save_config(self):
         config = {
             'selected_category': self.category_combo.currentText(),
-            'selected_question': self.question_list.currentItem().text() if self.question_list.currentItem() else '',
+            'selected_question': self.question_list.currentItem().text() if self.question_list.currentItem() else '',  # type: ignore
             'search_mode': 'exact' if self.exact_radio.isChecked() else 'fuzzy',
             'threshold': self.threshold_slider.value(),
             'preprocessing': self.preprocessing_checkbox.isChecked()
