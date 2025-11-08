@@ -87,6 +87,18 @@ class MainWindow(QtWidgets.QMainWindow):
         config_layout.addWidget(QtWidgets.QLabel('Question:'))
         self.question_list = QtWidgets.QListWidget()
         config_layout.addWidget(self.question_list)
+        
+        # Fuzzy matching options
+        fuzzy_layout = QtWidgets.QHBoxLayout()
+        self.fuzzy_checkbox = QtWidgets.QCheckBox('Enable Fuzzy Matching')
+        fuzzy_layout.addWidget(self.fuzzy_checkbox)
+        fuzzy_layout.addWidget(QtWidgets.QLabel('Threshold:'))
+        self.fuzzy_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.fuzzy_slider.setRange(50, 100)
+        self.fuzzy_slider.setValue(80)
+        fuzzy_layout.addWidget(self.fuzzy_slider)
+        config_layout.addLayout(fuzzy_layout)
+        
         top_layout.addWidget(config_group)
 
         layout.addLayout(top_layout)
@@ -144,7 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         question = question_item.text()
         term_sets = self.terms[category][question]
-        self.results = search_pdf_for_terms(self.selected_file, term_sets)
+        self.results = search_pdf_for_terms(self.selected_file, term_sets, self.fuzzy_checkbox.isChecked(), self.fuzzy_slider.value())
 
         self.results_list.clear()
         if not self.results:
