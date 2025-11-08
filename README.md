@@ -2,7 +2,7 @@
 
 [![Sponsored by Atlas Public Policy](https://img.shields.io/badge/Sponsored_by-Atlas_Public_Policy-blue)](https://www.atlaspolicy.com/)
 
-A Python-based tool to help analysts and researchers search through state NEVI plans for structured answers to key questions. The tool uses advanced search modes including exact keyword matching, fuzzy string matching for typos and variations, and semantic similarity (AI-powered) to find pages that discuss specific topics in uploaded PDF documents.
+A Python-based tool to help analysts and researchers search through state NEVI plans for structured answers to key questions. The tool uses exact keyword matching and fuzzy string matching for typos and variations to find pages that discuss specific topics in uploaded PDF documents.
 
 Originally developed for a WPI undergraduate research initiative, **sponsored by Atlas Public Policy**.
 
@@ -13,7 +13,7 @@ Originally developed for a WPI undergraduate research initiative, **sponsored by
 - Load any state NEVI plan (PDF)
 - Choose a category (e.g., Equity, Buildout, Maintenance)
 - Choose a question
-- Select search mode: Exact (keyword matching), Fuzzy (approximate matching), or Semantic (AI similarity)
+- Select search mode: Exact (keyword matching) or Fuzzy (approximate matching)
 - Adjust similarity threshold for fuzzy/semantic searches
 - Enable NLP preprocessing for better text matching
 - Search for structured keyword matches
@@ -110,11 +110,12 @@ Example:
 
 - **Exact**: Precise keyword matching with word boundaries. Searches for terms exactly as entered.
 - **Fuzzy**: Approximate string matching using similarity scoring. Useful for handling typos, variations, or synonyms.
-- **Semantic**: AI-powered similarity using embeddings (currently disabled due to system limitations). Finds conceptually related terms.
 
-For Fuzzy and Semantic modes, adjust the threshold slider (50-100%) to control match strictness.
+For Fuzzy mode, adjust the threshold slider (50-100%) to control match strictness.
 
 Enable NLP preprocessing for lemmatization and stop-word removal to improve matching accuracy.
+
+*Note: Semantic search (AI-powered similarity) is planned for a future release.*
 
 ---
 
@@ -124,7 +125,7 @@ This project was originally developed as part of a WPI undergraduate research in
 
 The research and tool development were **sponsored by Atlas Public Policy** to assist in accelerating EV adoption and infrastructure analysis.
 
-Recent enhancements include migration to PyQt6, upgraded PDF processing with PyMuPDF, addition of fuzzy and semantic search modes, NLP preprocessing, and persistent user settings.
+Recent enhancements include migration to PyQt6, upgraded PDF processing with PyMuPDF, addition of fuzzy search modes, NLP preprocessing, and persistent user settings.
 
 ---
 

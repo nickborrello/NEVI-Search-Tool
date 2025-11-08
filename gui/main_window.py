@@ -116,18 +116,6 @@ class MainWindow(QtWidgets.QMainWindow):
         fuzzy_layout.addWidget(fuzzy_icon)
         radio_layout.addLayout(fuzzy_layout)
         
-        self.semantic_radio = QtWidgets.QRadioButton('Semantic')
-        self.semantic_radio.setEnabled(False)  # Disabled due to torch issues
-        self.semantic_radio.setToolTip('Semantic similarity using embeddings (disabled due to system limitations).')
-        semantic_layout = QtWidgets.QHBoxLayout()
-        semantic_layout.setSpacing(0)
-        semantic_layout.addWidget(self.semantic_radio)
-        semantic_icon = QtWidgets.QLabel()
-        semantic_icon.setPixmap(QtWidgets.QApplication.style().standardPixmap(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxInformation))
-        semantic_icon.setToolTip('Semantic similarity using embeddings\n(disabled due to system limitations).\nThis mode uses advanced AI to understand meaning\nand context, finding conceptually related terms\neven if words differ.')
-        semantic_layout.addWidget(semantic_icon)
-        radio_layout.addLayout(semantic_layout)
-        
         mode_layout.addLayout(radio_layout)
         
         threshold_layout = QtWidgets.QHBoxLayout()
@@ -153,7 +141,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect mode change
         self.exact_radio.toggled.connect(self.on_mode_changed)
         self.fuzzy_radio.toggled.connect(self.on_mode_changed)
-        self.semantic_radio.toggled.connect(self.on_mode_changed)
         
         layout.addWidget(config_group)
 
@@ -237,7 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         use_preprocessing = self.preprocessing_checkbox.isChecked()
         
-        mode = 'exact' if self.exact_radio.isChecked() else 'fuzzy' if self.fuzzy_radio.isChecked() else 'semantic'
+        mode = 'exact' if self.exact_radio.isChecked() else 'fuzzy' if self.fuzzy_radio.isChecked() else 'exact'
         threshold = self.threshold_slider.value()
         
         self.mode = mode
@@ -247,9 +234,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.results = search_pdf_for_terms(self.selected_file, term_sets, False, 80, use_preprocessing)
         elif self.fuzzy_radio.isChecked():
             self.results = search_pdf_for_terms(self.selected_file, term_sets, True, threshold, use_preprocessing)
-        else:  # semantic
-            threshold = self.threshold_slider.value() / 100.0  # 0.5 to 1.0
-            self.results = semantic_search_pdf(self.selected_file, term_sets, threshold)
 
         if not self.results:
             self.results_label.setText('No matches found.')
@@ -284,8 +268,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.exact_radio.setChecked(True)
             elif mode == 'fuzzy':
                 self.fuzzy_radio.setChecked(True)
-            elif mode == 'semantic':
-                self.semantic_radio.setChecked(True)
+            else:
+                self.exact_radio.setChecked(True)  # default
         if 'threshold' in self.config:
             self.threshold_slider.setValue(self.config['threshold'])
         if 'preprocessing' in self.config:
@@ -296,7 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
         config = {
             'selected_category': self.category_combo.currentText(),
             'selected_question': self.question_list.currentItem().text() if self.question_list.currentItem() else '',
-            'search_mode': 'exact' if self.exact_radio.isChecked() else 'fuzzy' if self.fuzzy_radio.isChecked() else 'semantic',
+            'search_mode': 'exact' if self.exact_radio.isChecked() else 'fuzzy',
             'threshold': self.threshold_slider.value(),
             'preprocessing': self.preprocessing_checkbox.isChecked()
         }
@@ -304,7 +288,7 @@ class MainWindow(QtWidgets.QMainWindow):
             json.dump(config, f, indent=2)
 
     def on_mode_changed(self):
-        if self.fuzzy_radio.isChecked() or self.semantic_radio.isChecked():
+        if self.fuzzy_radio.isChecked():
             self.threshold_slider.setEnabled(True)
         else:
             self.threshold_slider.setEnabled(False)
