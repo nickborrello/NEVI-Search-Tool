@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 import os
 import json
+import shutil
 from logic.search_engine import search_pdf_for_terms, semantic_search_pdf
 from logic.term_loader import load_terms
 from gui.reader_window import ReaderWindow
@@ -16,9 +17,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.selected_file = None
         self.results = {}
 
+        # User data directory
+        self.user_dir = os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "EV-Search-Tool")
+        os.makedirs(self.user_dir, exist_ok=True)
+        self.config_path = os.path.join(self.user_dir, "config.json")
+        self.terms_path = os.path.join(self.user_dir, "terms.json")
+
         self.setup_ui()
         self.load_config()
-        self.load_terms_file('data/terms.json')
+        self.load_terms_file()
         self.apply_config()
 
         self.setStyleSheet('''
@@ -180,8 +187,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.load_button.setText(f"📁 {os.path.basename(fname)}")
             self.statusBar().showMessage(f'Loaded PDF: {os.path.basename(fname)}')
 
-    def load_terms_file(self, fname):
-        self.terms = load_terms(fname)
+    def load_terms_file(self):
+        if not os.path.exists(self.terms_path):
+            # Copy default terms from bundled data
+            bundled_terms = os.path.join(os.path.dirname(__file__), '..', 'data', 'terms.json')
+            if os.path.exists(bundled_terms):
+                shutil.copy(bundled_terms, self.terms_path)
+        self.terms = load_terms(self.terms_path)
         self.category_combo.clear()
         self.category_combo.currentTextChanged.connect(self.update_questions)
         self.category_combo.addItems(self.terms.keys())
@@ -205,9 +217,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_terms_editor(self):
         current_cat = self.category_combo.currentText()
-        editor = TermEditorWindow('data/terms.json', start_category=current_cat)
+        editor = TermEditorWindow(self.terms_path, start_category=current_cat)
         editor.exec()
-        self.load_terms_file('data/terms.json')
+        self.load_terms_file()
 
     def run_search(self):
         if not self.selected_file:
@@ -259,9 +271,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.reader.show()
 
     def load_config(self):
-        config_path = 'config.json'
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
+        if os.path.exists(self.config_path):
+            with open(self.config_path, 'r') as f:
                 self.config = json.load(f)
         else:
             self.config = {}
@@ -289,7 +300,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'threshold': self.threshold_slider.value(),
             'preprocessing': self.preprocessing_checkbox.isChecked()
         }
-        with open('config.json', 'w') as f:
+        with open(self.config_path, 'w') as f:
             json.dump(config, f, indent=2)
 
     def on_mode_changed(self):

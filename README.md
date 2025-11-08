@@ -8,7 +8,7 @@ Originally developed for a WPI undergraduate research initiative, **sponsored by
 
 ---
 
-## 📄 What It Does
+## What It Does
 
 - Load any state NEVI plan (PDF)
 - Choose a category (e.g., Equity, Buildout, Maintenance)
@@ -23,14 +23,13 @@ Originally developed for a WPI undergraduate research initiative, **sponsored by
 
 ---
 
-## 🧱 Project Structure
+## Project Structure
 
 ```
 .
 ├── main.py                   # Entry point
-├── config.json               # User settings (auto-generated)
 ├── data/
-│   └── terms.json             # Questions and keyword groups
+│   └── terms.json             # Default questions and keyword groups (bundled)
 ├── assets/
 │   └── wpi_logo.ico           # App icon
 ├── gui/
@@ -42,11 +41,15 @@ Originally developed for a WPI undergraduate research initiative, **sponsored by
 │   ├── term_loader.py         # Resource path handling
 │   └── settings.py            # (reserved for future)
 └── README.md
+
+User data (created on first run in user's app data directory):
+- config.json: User settings
+- terms.json: Editable questions and keyword groups
 ```
 
 ---
 
-## ⚙️ Installation (Run Locally)
+## Installation (Run Locally)
 
 ### Requirements
 
@@ -65,7 +68,7 @@ python -m spacy download en_core_web_sm
 
 ---
 
-## ▶️ Running the App
+## Running the App
 
 From the project root:
 
@@ -83,7 +86,7 @@ python main.py
 
 ---
 
-## 🧠 JSON Term Structure
+## JSON Term Structure
 
 Each question has grouped terms. A page matches if **at least one word from each group** appears on it.
 
@@ -103,7 +106,7 @@ Example:
 
 ---
 
-## 🔍 Search Modes
+## Search Modes
 
 - **Exact**: Precise keyword matching with word boundaries. Searches for terms exactly as entered.
 - **Fuzzy**: Approximate string matching using similarity scoring. Useful for handling typos, variations, or synonyms.
@@ -115,7 +118,7 @@ Enable NLP preprocessing for lemmatization and stop-word removal to improve matc
 
 ---
 
-## 🧑‍💻 Background
+## Background
 
 This project was originally developed as part of a WPI undergraduate research initiative in response to the **National Electric Vehicle Infrastructure (NEVI)** program.
 
@@ -125,7 +128,7 @@ Recent enhancements include migration to PyQt6, upgraded PDF processing with PyM
 
 ---
 
-## ✍️ Authors
+## Authors
 
 Developed by Nicholas Borrello  
 Supported by WPI faculty and advisors  
