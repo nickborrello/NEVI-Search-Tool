@@ -134,9 +134,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # Results section
         results_group = QtWidgets.QGroupBox('Search Results')
         results_layout = QtWidgets.QVBoxLayout(results_group)
-        self.results_list = QtWidgets.QListWidget()
-        self.results_list.itemDoubleClicked.connect(self.open_page)
-        results_layout.addWidget(self.results_list)
+        self.results_label = QtWidgets.QLabel('No search performed yet.')
+        results_layout.addWidget(self.results_label)
+        self.view_button = QtWidgets.QPushButton('View Results')
+        self.view_button.clicked.connect(self.view_results)
+        self.view_button.setEnabled(False)
+        results_layout.addWidget(self.view_button)
         layout.addWidget(results_group)
 
         self.statusBar().showMessage('Ready')
@@ -195,26 +198,20 @@ class MainWindow(QtWidgets.QMainWindow):
             threshold = self.threshold_slider.value() / 100.0  # 0.5 to 1.0
             self.results = semantic_search_pdf(self.selected_file, term_sets, threshold)
 
-        self.results_list.clear()
         if not self.results:
-            self.results_list.addItem('No matches found.')
+            self.results_label.setText('No matches found.')
+            self.view_button.setEnabled(False)
         else:
-            for page in sorted(self.results.keys()):
-                self.results_list.addItem(f'Page {page + 1}: {len(self.results[page])} matches')
+            num_pages = len(self.results)
+            self.results_label.setText(f'Found matches on {num_pages} pages.')
+            self.view_button.setEnabled(True)
 
         self.statusBar().showMessage(f'Search completed. Found matches on {len(self.results)} pages.')
 
-    def open_page(self, item):
-        if not self.results:
-            return
-        text = item.text()
-        if 'Page' in text:
-            page_part = text.split(':')[0]
-            page_num = int(page_part.split()[1]) - 1
-            if page_num in self.results:
-                category = self.category_combo.currentText()
-                question = self.question_list.currentItem().text()
-                term_sets = self.terms[category][question]
-                self.reader = ReaderWindow(self.selected_file, list(self.results.keys()), term_sets)
-                self.reader.current_index = list(self.results.keys()).index(page_num)
-                self.reader.show()
+    def view_results(self):
+        if self.results:
+            category = self.category_combo.currentText()
+            question = self.question_list.currentItem().text()
+            term_sets = self.terms[category][question]
+            self.reader = ReaderWindow(self.selected_file, list(self.results.keys()), term_sets)
+            self.reader.show()
