@@ -144,6 +144,8 @@ class TermEditorWindow(QtWidgets.QDialog):
                 for q in sorted(self.data[cat].keys()):
                     item = QtWidgets.QListWidgetItem(q)
                     self.q_list.addItem(item)
+                if self.q_list.count() > 0:
+                    self.q_list.setCurrentRow(0)
 
     def on_question_changed(self, current, previous):
         self.terms_table.setRowCount(0)

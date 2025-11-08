@@ -1,8 +1,10 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 import fitz  # PyMuPDF
+import re
+from thefuzz import fuzz
 
 class ReaderWindow(QtWidgets.QWidget):
-    def __init__(self, pdf_path, matched_pages, term_sets, parent=None):
+    def __init__(self, pdf_path, matched_pages, term_sets, mode='exact', threshold=80, parent=None):
         super().__init__(parent)
         self.setWindowTitle('PDF Viewer - Highlighted Matches')
         self.resize(1000, 700)
@@ -11,6 +13,8 @@ class ReaderWindow(QtWidgets.QWidget):
         self.pdf_path = pdf_path
         self.matched_pages = matched_pages
         self.term_sets = term_sets
+        self.mode = mode
+        self.threshold = threshold
         self.current_index = 0
 
         self.doc = fitz.open(self.pdf_path)
@@ -86,19 +90,40 @@ class ReaderWindow(QtWidgets.QWidget):
         fmt = QtGui.QTextCharFormat()
         fmt.setBackground(QtGui.QColor('#FFA500'))
 
-        for group in term_sets:
-            for term in group:
-                if not term.strip():
+        if self.mode == 'exact' or self.mode == 'semantic':
+            for group in term_sets:
+                for term in group:
+                    if not term.strip():
+                        continue
+                    regex = QtCore.QRegularExpression(r'\b' + QtCore.QRegularExpression.escape(term) + r'\b', QtCore.QRegularExpression.PatternOption.CaseInsensitiveOption)
+                    it = regex.globalMatch(text)
+                    while it.hasNext():
+                        match = it.next()
+                        start = match.capturedStart()
+                        end = match.capturedEnd()
+                        cursor.setPosition(start)
+                        cursor.setPosition(end, QtGui.QTextCursor.MoveMode.KeepAnchor)
+                        cursor.mergeCharFormat(fmt)
+        elif self.mode == 'fuzzy':
+            words = re.findall(r'\b\w+\b', text)
+            highlighted_words = set()
+            for word in words:
+                if word.lower() in highlighted_words:
                     continue
-                regex = QtCore.QRegularExpression(r'\b' + QtCore.QRegularExpression.escape(term) + r'\b', QtCore.QRegularExpression.PatternOption.CaseInsensitiveOption)
-                it = regex.globalMatch(text)
-                while it.hasNext():
-                    match = it.next()
-                    start = match.capturedStart()
-                    end = match.capturedEnd()
-                    cursor.setPosition(start)
-                    cursor.setPosition(end, QtGui.QTextCursor.MoveMode.KeepAnchor)
-                    cursor.mergeCharFormat(fmt)
+                for group in term_sets:
+                    for term in group:
+                        if fuzz.ratio(term.lower(), word.lower()) >= self.threshold:
+                            highlighted_words.add(word.lower())
+                            regex = QtCore.QRegularExpression(r'\b' + QtCore.QRegularExpression.escape(word) + r'\b', QtCore.QRegularExpression.PatternOption.CaseInsensitiveOption)
+                            it = regex.globalMatch(text)
+                            while it.hasNext():
+                                match = it.next()
+                                start = match.capturedStart()
+                                end = match.capturedEnd()
+                                cursor.setPosition(start)
+                                cursor.setPosition(end, QtGui.QTextCursor.MoveMode.KeepAnchor)
+                                cursor.mergeCharFormat(fmt)
+                            break
 
     def next_page(self):
         if self.current_index < len(self.matched_pages) - 1:
