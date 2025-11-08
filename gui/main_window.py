@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 import os
-from logic.search_engine import search_pdf_for_terms
+from logic.search_engine import search_pdf_for_terms, semantic_search_pdf
 from logic.term_loader import load_terms
 from gui.reader_window import ReaderWindow
 from gui.term_editor_window import TermEditorWindow
@@ -88,16 +88,39 @@ class MainWindow(QtWidgets.QMainWindow):
         self.question_list = QtWidgets.QListWidget()
         config_layout.addWidget(self.question_list)
         
-        # Fuzzy matching options
-        fuzzy_layout = QtWidgets.QHBoxLayout()
-        self.fuzzy_checkbox = QtWidgets.QCheckBox('Enable Fuzzy Matching')
-        fuzzy_layout.addWidget(self.fuzzy_checkbox)
-        fuzzy_layout.addWidget(QtWidgets.QLabel('Threshold:'))
-        self.fuzzy_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.fuzzy_slider.setRange(50, 100)
-        self.fuzzy_slider.setValue(80)
-        fuzzy_layout.addWidget(self.fuzzy_slider)
-        config_layout.addLayout(fuzzy_layout)
+        # Search mode options
+        mode_layout = QtWidgets.QVBoxLayout()
+        mode_layout.addWidget(QtWidgets.QLabel('Search Mode:'))
+        radio_layout = QtWidgets.QHBoxLayout()
+        self.exact_radio = QtWidgets.QRadioButton('Exact')
+        self.exact_radio.setChecked(True)
+        radio_layout.addWidget(self.exact_radio)
+        self.fuzzy_radio = QtWidgets.QRadioButton('Fuzzy')
+        radio_layout.addWidget(self.fuzzy_radio)
+        self.semantic_radio = QtWidgets.QRadioButton('Semantic')
+        self.semantic_radio.setEnabled(False)  # Disabled due to torch issues
+        radio_layout.addWidget(self.semantic_radio)
+        mode_layout.addLayout(radio_layout)
+        
+        threshold_layout = QtWidgets.QHBoxLayout()
+        threshold_layout.addWidget(QtWidgets.QLabel('Threshold:'))
+        self.threshold_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.threshold_slider.setRange(50, 100)
+        self.threshold_slider.setValue(80)
+        self.threshold_slider.setEnabled(False)
+        threshold_layout.addWidget(self.threshold_slider)
+        mode_layout.addLayout(threshold_layout)
+        
+        config_layout.addLayout(mode_layout)
+        
+        # NLP preprocessing
+        self.preprocessing_checkbox = QtWidgets.QCheckBox('Enable NLP Preprocessing')
+        config_layout.addWidget(self.preprocessing_checkbox)
+        
+        # Connect mode change
+        self.exact_radio.toggled.connect(self.on_mode_changed)
+        self.fuzzy_radio.toggled.connect(self.on_mode_changed)
+        self.semantic_radio.toggled.connect(self.on_mode_changed)
         
         top_layout.addWidget(config_group)
 
@@ -137,6 +160,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if category in self.terms:
             self.question_list.addItems(self.terms[category].keys())
 
+    def on_mode_changed(self):
+        enabled = self.fuzzy_radio.isChecked() or self.semantic_radio.isChecked()
+        self.threshold_slider.setEnabled(enabled)
+
     def open_terms_editor(self):
         current_cat = self.category_combo.currentText()
         editor = TermEditorWindow('data/terms.json', start_category=current_cat)
@@ -156,7 +183,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         question = question_item.text()
         term_sets = self.terms[category][question]
-        self.results = search_pdf_for_terms(self.selected_file, term_sets, self.fuzzy_checkbox.isChecked(), self.fuzzy_slider.value())
+        
+        use_preprocessing = self.preprocessing_checkbox.isChecked()
+        
+        if self.exact_radio.isChecked():
+            self.results = search_pdf_for_terms(self.selected_file, term_sets, False, 80, use_preprocessing)
+        elif self.fuzzy_radio.isChecked():
+            threshold = self.threshold_slider.value()
+            self.results = search_pdf_for_terms(self.selected_file, term_sets, True, threshold, use_preprocessing)
+        else:  # semantic
+            threshold = self.threshold_slider.value() / 100.0  # 0.5 to 1.0
+            self.results = semantic_search_pdf(self.selected_file, term_sets, threshold)
 
         self.results_list.clear()
         if not self.results:
