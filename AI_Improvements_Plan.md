@@ -143,3 +143,12 @@ Add toggles and controls in the main window for new features.
 
 ## Conclusion
 These improvements will make the tool more intelligent and adaptable. Start with fuzzy matching and semantic search for quick wins. Estimated effort: 2-3 weeks. Update README with new features.
+## Implementation Status
+- [x] Fuzzy Matching: Implemented with thefuzz library, configurable threshold.
+- [x] Semantic Search: Not implemented due to PyTorch DLL issues on Windows.
+- [x] NLP Preprocessing: Implemented with spaCy, handles import errors gracefully.
+- [ ] Query Expansion with LLMs: Not implemented due to PyTorch dependencies.
+- [x] UI Integration: Added radio buttons for search modes, threshold slider, preprocessing checkbox.
+- [ ] Testing: Basic testing done; further validation needed.
+
+Note: Semantic search and LLM features require PyTorch, which has compatibility issues on this Windows system (DLL initialization failure). These can be added later on compatible systems.
