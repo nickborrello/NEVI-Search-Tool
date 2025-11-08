@@ -11,24 +11,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          pip install pyinstaller PyQt5 pypdf
+          pip install pyinstaller PyQt6 PyMuPDF thefuzz spacy
+          python -m spacy download en_core_web_sm
 
       - name: Build with PyInstaller
-        run: pyinstaller --onefile --windowed --name SearchTool --icon=assets/wpi_logo.ico --add-data "data\\terms.json;data" main.py
-
+        run: pyinstaller --onefile --windowed --name EV-Infrastructure-Search-Tool --icon=assets/wpi_logo.ico --add-data "data;data" --add-data "assets;assets" main.py
 
       - name: Upload .exe to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: dist/SearchTool.exe
+          files: dist/EV-Infrastructure-Search-Tool.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
