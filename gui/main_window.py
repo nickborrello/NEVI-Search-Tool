@@ -8,17 +8,17 @@ from gui.term_editor_window import TermEditorWindow
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Universal PDF Keyword Search")
-        self.resize(1200, 800)
-        self.setWindowIcon(QtGui.QIcon("assets/wpi_logo.ico"))  # Assuming icon exists
+        self.setWindowTitle('EV Infrastructure Plan Search Tool')
+        self.resize(1000, 700)
+        self.setWindowIcon(QtGui.QIcon('assets/wpi_logo.ico'))
         self.terms = {}
         self.selected_file = None
+        self.results = {}
 
         self.setup_ui()
-        self.load_terms_file("data/terms.json")
+        self.load_terms_file('data/terms.json')
 
-        # Apply dark theme stylesheet
-        self.setStyleSheet("""
+        self.setStyleSheet('''
             QMainWindow { background-color: #2b2b2b; color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
             QMenuBar { background-color: #3c3c3c; color: #ffffff; border-bottom: 1px solid #555555; }
             QMenuBar::item { background-color: transparent; padding: 4px 8px; }
@@ -36,124 +36,134 @@ class MainWindow(QtWidgets.QMainWindow):
             QComboBox { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; padding: 4px; border-radius: 4px; }
             QComboBox:hover { border-color: #0078d4; }
             QComboBox::drop-down { border: none; }
-            QComboBox::down-arrow { image: url(down_arrow.png); }  /* Placeholder */
             QComboBox QAbstractItemView { background-color: #3c3c3c; color: #ffffff; selection-background-color: #0078d4; }
             QListWidget { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; border-radius: 4px; }
             QListWidget::item { padding: 4px; }
             QListWidget::item:selected { background-color: #0078d4; color: #ffffff; }
             QListWidget::item:hover { background-color: #555555; }
             QTextEdit { background-color: #3c3c3c; color: #ffffff; border: 1px solid #555555; border-radius: 4px; padding: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
+            QGroupBox { font-weight: bold; border: 2px solid #555555; border-radius: 5px; margin-top: 1ex; padding-top: 10px; color: #ffffff; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; color: #ffffff; }
+            QLabel { color: #ffffff; }
             QStatusBar { background-color: #3c3c3c; color: #ffffff; border-top: 1px solid #555555; }
-        """)
+        ''')
 
     def setup_ui(self):
+        central_widget = QtWidgets.QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QtWidgets.QVBoxLayout(central_widget)
+        layout.setSpacing(10)
+        layout.setContentsMargins(20, 20, 20, 20)
+
         # Menu bar
         menubar = self.menuBar()
-        file_menu = menubar.addMenu("File")
-        load_action = QtGui.QAction("📁 Load PDF", self)
+        file_menu = menubar.addMenu('File')
+        load_action = QtGui.QAction('Load PDF', self)
         load_action.triggered.connect(self.load_pdf)
         file_menu.addAction(load_action)
 
         # Toolbar
-        toolbar = self.addToolBar("Main Toolbar")
-        edit_action = QtGui.QAction("⚙️ Edit Terms", self)
+        toolbar = self.addToolBar('Main Toolbar')
+        edit_action = QtGui.QAction('Edit Terms', self)
         edit_action.triggered.connect(self.open_terms_editor)
         toolbar.addAction(edit_action)
-        search_action = QtGui.QAction("🔍 Run Search", self)
-        search_action.triggered.connect(self.run_search)
-        toolbar.addAction(search_action)
 
-        # Central widget with splitter
-        central_widget = QtWidgets.QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QtWidgets.QHBoxLayout(central_widget)
+        # Top section: PDF and Configuration
+        top_layout = QtWidgets.QHBoxLayout()
 
-        # Left panel: Configuration
-        config_group = QtWidgets.QGroupBox("Search Configuration")
+        pdf_group = QtWidgets.QGroupBox('Document')
+        pdf_layout = QtWidgets.QVBoxLayout(pdf_group)
+        self.file_label = QtWidgets.QLabel('No PDF loaded')
+        pdf_layout.addWidget(self.file_label)
+        top_layout.addWidget(pdf_group)
+
+        config_group = QtWidgets.QGroupBox('Search Configuration')
         config_layout = QtWidgets.QVBoxLayout(config_group)
-
         cat_layout = QtWidgets.QHBoxLayout()
-        cat_layout.addWidget(QtWidgets.QLabel("Category:"))
+        cat_layout.addWidget(QtWidgets.QLabel('Category:'))
         self.category_combo = QtWidgets.QComboBox()
-        self.category_combo.setToolTip("Select a category of search terms")
         cat_layout.addWidget(self.category_combo)
         config_layout.addLayout(cat_layout)
+        config_layout.addWidget(QtWidgets.QLabel('Question:'))
+        self.question_list = QtWidgets.QListWidget()
+        config_layout.addWidget(self.question_list)
+        top_layout.addWidget(config_group)
 
-        config_layout.addWidget(QtWidgets.QLabel("Question:"))
-        self.term_list = QtWidgets.QListWidget()
-        self.term_list.setToolTip("Select a question to define the keywords to search for")
-        config_layout.addWidget(self.term_list)
+        layout.addLayout(top_layout)
 
-        main_layout.addWidget(config_group, 1)
+        # Search button
+        self.search_button = QtWidgets.QPushButton('🔍 Run Search')
+        self.search_button.clicked.connect(self.run_search)
+        layout.addWidget(self.search_button)
 
-        # Right panel: Term Preview
-        preview_group = QtWidgets.QGroupBox("Selected Search Terms")
-        preview_layout = QtWidgets.QVBoxLayout(preview_group)
-        self.terms_preview = QtWidgets.QTextEdit()
-        self.terms_preview.setReadOnly(True)
-        self.terms_preview.setPlaceholderText("Select a category and question to preview the search terms here.")
-        self.terms_preview.setMaximumHeight(300)
-        preview_layout.addWidget(self.terms_preview)
-        main_layout.addWidget(preview_group, 1)
+        # Results section
+        results_group = QtWidgets.QGroupBox('Search Results')
+        results_layout = QtWidgets.QVBoxLayout(results_group)
+        self.results_list = QtWidgets.QListWidget()
+        self.results_list.itemDoubleClicked.connect(self.open_page)
+        results_layout.addWidget(self.results_list)
+        layout.addWidget(results_group)
 
-        # Status bar
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage('Ready')
 
     def load_pdf(self):
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open PDF", "plans", "PDF Files (*.pdf)")
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open PDF', 'plans', 'PDF Files (*.pdf)')
         if fname:
             self.selected_file = fname
-            self.statusBar().showMessage(f"Loaded PDF: {os.path.basename(fname)}")
-        else:
-            self.statusBar().showMessage("No PDF loaded")
+            self.file_label.setText(f'Loaded: {os.path.basename(fname)}')
+            self.statusBar().showMessage(f'Loaded PDF: {os.path.basename(fname)}')
 
     def load_terms_file(self, fname):
         self.terms = load_terms(fname)
         self.category_combo.clear()
         self.category_combo.addItems(self.terms.keys())
-        self.category_combo.currentTextChanged.connect(self.update_term_list)
-        self.term_list.currentItemChanged.connect(self.update_terms_preview)
-        self.update_term_list()
+        self.category_combo.currentTextChanged.connect(self.update_questions)
 
-    def update_terms_preview(self):
+    def update_questions(self):
         category = self.category_combo.currentText()
-        question_item = self.term_list.currentItem()
-        if category in self.terms and question_item:
-            question = question_item.text()
-            if question in self.terms[category]:
-                term_sets = self.terms[category][question]
-                preview_text = f"Category: {category}\nQuestion: {question}\n\nSearch Terms:\n"
-                for i, group in enumerate(term_sets, 1):
-                    preview_text += f"Group {i}: {', '.join(group)}\n"
-                self.terms_preview.setPlainText(preview_text)
-            else:
-                self.terms_preview.setPlainText("No terms found for selected question.")
-        else:
-            self.terms_preview.setPlainText("Select a category and question to preview the search terms here.")
+        self.question_list.clear()
+        if category in self.terms:
+            self.question_list.addItems(self.terms[category].keys())
 
     def open_terms_editor(self):
         current_cat = self.category_combo.currentText()
-        editor = TermEditorWindow("data/terms.json", start_category=current_cat)
+        editor = TermEditorWindow('data/terms.json', start_category=current_cat)
         editor.exec()
-        self.load_terms_file("data/terms.json")
+        self.load_terms_file('data/terms.json')
 
     def run_search(self):
         if not self.selected_file:
-            QtWidgets.QMessageBox.warning(self, "No File", "Please load a PDF file.")
+            QtWidgets.QMessageBox.warning(self, 'No File', 'Please load a PDF file.')
             return
 
         category = self.category_combo.currentText()
-        question_item = self.term_list.currentItem()
+        question_item = self.question_list.currentItem()
         if not category or not question_item:
-            QtWidgets.QMessageBox.warning(self, "Incomplete Selection", "Please select a category and a question.")
+            QtWidgets.QMessageBox.warning(self, 'Incomplete Selection', 'Please select a category and a question.')
             return
 
         question = question_item.text()
         term_sets = self.terms[category][question]
-        results = search_pdf_for_terms(self.selected_file, term_sets)
+        self.results = search_pdf_for_terms(self.selected_file, term_sets)
 
-        if not results:
-            QtWidgets.QMessageBox.information(self, "No Results", "No matches found.")
+        self.results_list.clear()
+        if not self.results:
+            self.results_list.addItem('No matches found.')
         else:
-            self.reader = ReaderWindow(self.selected_file, list(results.keys()), term_sets)
-            self.reader.show()
+            for page in sorted(self.results.keys()):
+                self.results_list.addItem(f'Page {page + 1}: {len(self.results[page])} matches')
+
+        self.statusBar().showMessage(f'Search completed. Found matches on {len(self.results)} pages.')
+
+    def open_page(self, item):
+        if not self.results:
+            return
+        text = item.text()
+        if 'Page' in text:
+            page_num = int(text.split()[1]) - 1
+            if page_num in self.results:
+                category = self.category_combo.currentText()
+                question = self.question_list.currentItem().text()
+                term_sets = self.terms[category][question]
+                self.reader = ReaderWindow(self.selected_file, [page_num], term_sets)
+                self.reader.show()

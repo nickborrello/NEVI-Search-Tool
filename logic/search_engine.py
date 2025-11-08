@@ -1,4 +1,4 @@
-from pypdf import PdfReader
+import fitz  # PyMuPDF
 import re
 
 def group_matches(text, group):
@@ -12,12 +12,14 @@ def group_matches(text, group):
 
 def search_pdf_for_terms(pdf_path, term_sets):
     results = {}
-    reader = PdfReader(pdf_path)
+    doc = fitz.open(pdf_path)
 
-    for i, page in enumerate(reader.pages):
-        text = page.extract_text() or ""
+    for i in range(len(doc)):
+        page = doc.load_page(i)
+        text = page.get_text() or ""
         lower_text = text.lower()
         if all(group_matches(lower_text, group) for group in term_sets):
             results[i] = text
 
+    doc.close()
     return results
